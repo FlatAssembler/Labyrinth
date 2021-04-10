@@ -1,0 +1,115 @@
+GraphicsWindow.Show()
+GraphicsWindow.BackgroundColor="Black"
+GraphicsWindow.BrushColor="LightGreen"
+GraphicsWindow.Width=410
+GraphicsWindow.Height=410
+GraphicsWindow.CanResize="False"
+maxx=-1
+maxy=-1
+sx[1]=1
+sx[2]=-1
+sx[3]=0
+sx[4]=0
+sy[1]=0
+sy[2]=0
+sy[3]=1
+sy[4]=-1
+For i=-1 To 41
+  For j=-1 To 41
+    polje[i][j]=0
+  EndFor
+EndFor
+Stack.PushValue("dist",0)
+Stack.PushValue("x",0)
+Stack.PushValue("y",0)
+While (Stack.GetCount("dist")>0)
+  x=Stack.PopValue("x")
+  y=Stack.PopValue("y")
+  dist=Stack.PopValue("dist")
+  If (polje[x][y]=0 And polje[x-1][y]+polje[x+1][y]+polje[x][y-1]+polje[x][y+1]<2 And x<40 And y<40 And x>=0 And y>=0) Then
+    polje[x][y]=1
+    udaljenost[x][y]=dist
+    If (x*y>maxx*maxy) then
+      maxx=x
+      maxy=y
+    EndIf
+    GraphicsWindow.FillRectangle(x*10+10,y*10+10,10.5,10.5)
+    For i=1 To 16
+      prvi=Math.GetRandomNumber(4)
+      drugi=Math.GetRandomNumber(4)
+      tmpx=sx[prvi]
+      sx[prvi]=sx[drugi]
+      sx[drugi]=tmpx
+      tmpy=sy[prvi]
+      sy[prvi]=sy[drugi]
+      sy[drugi]=tmpy
+    EndFor
+    For i=1 To 4
+      Stack.PushValue("x",x+sx[i])
+      Stack.PushValue("y",y+sy[i])
+      Stack.PushValue("dist",dist+1)
+    EndFor
+  EndIf
+EndWhile
+GraphicsWindow.BrushColor="Red"
+GraphicsWindow.FillRectangle(maxx*10+10,maxy*10+10,10,10)
+GraphicsWindow.BrushColor="Blue"
+GraphicsWindow.PenColor="Blue"
+hodac=Shapes.AddRectangle(10,10)
+Shapes.Move(hodac,10,10)
+hx=0
+hy=0
+GraphicsWindow.KeyUp=OnKeyUp
+Sub OnKeyUp
+  brojac=brojac+1
+  Program.Delay(100)
+  lstk=GraphicsWindow.LastKey
+  If ((lstk="Left" Or lstk="A") And polje[hx-1][hy]=1) Then
+    hx=hx-1
+  EndIf
+  If ((lstk="Right" Or lstk="D") And polje[hx+1][hy]=1) Then
+    hx=hx+1
+  EndIf
+  If ((lstk="Up" Or lstk="W") And polje[hx][hy-1]=1) Then
+    hy=hy-1
+  EndIf
+  If ((lstk="Down" Or lstk="S") And polje[hx][hy+1]=1) Then
+    hy=hy+1
+  EndIf
+  Shapes.Move(hodac,hx*10+10,hy*10+10)
+  If (hx=maxx And hy=maxy) Then
+    Program.Delay(2048)
+    bodovi=Math.Round(Math.Power(udaljenost[maxx][maxy]*31.6228/brojac,2))
+    Timer.Pause()
+    GraphicsWindow.Hide()
+    TextWindow.WriteLine("Igra je zavrsena, pobijedili ste!")
+    TextWindow.WriteLine("Preostalo vam je vremena: "+Math.Round(100*vrijeme/Math.Ceiling(udaljenost[maxx][maxy]*0.55))+"%")
+    TextWindow.WriteLine("Broj pritisnutih tipki: "+brojac)
+    TextWindow.WriteLine("Minimalan potreban broj pritisnutih tipki: "+udaljenost[maxx][maxy]+".")
+    TextWindow.WriteLine("-------------------------------")
+    TextWindow.WriteLine("Osvojili ste bodova: "+bodovi+". (maksimum 1000 bodova).")
+    TextWindow.WriteLine("")
+    TextWindow.WriteLine("Nadam se da ste uzivali igrajuci se.")
+    TextWindow.WriteLine("Autor: Teo Samarzija.")
+    TextWindow.WriteLine("")
+    TextWindow.Pause()
+    Program.End()
+  EndIf
+EndSub
+Timer.Interval=1000
+vrijeme=Math.Ceiling(udaljenost[maxx][maxy]*0.55)
+Timer.Tick=OnTick
+Sub OnTick
+  vrijeme=vrijeme-1
+  GraphicsWindow.Title="Igra labirinta. Preostalo vrijeme: "+vrijeme+" sec."
+  If (vrijeme=-1) Then
+    Timer.Pause()
+    Program.Delay(1000)
+    GraphicsWindow.Hide()
+    TextWindow.WriteLine("Vrijeme je isteklo, izgubili ste.")
+    TextWindow.WriteLine("Nadam se da ste uzivali igrajuci se.")
+    TextWindow.WriteLine("Autor: Teo Samarzija")
+    TextWindow.Pause()
+    Program.End()
+  EndIf
+EndSub
